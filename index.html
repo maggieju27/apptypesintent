@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>App Types × Intent Library</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="site-header">
+      <div class="header-inner page-shell">
+        <div class="header-top-row">
+          <div class="header-copy">
+            <p class="eyebrow">Visual reference library</p>
+            <h1 class="site-title">App Types × Intent Library</h1>
+            <p class="site-subtitle">
+              A visual archive of product patterns across categories and user
+              intents.
+            </p>
+          </div>
+
+          <div class="header-tools">
+            <label class="search-field" for="search-input">
+              <span class="search-icon" aria-hidden="true">⌕</span>
+              <input
+                id="search-input"
+                type="search"
+                placeholder="Search screenshots, apps, or intents"
+                autocomplete="off"
+              />
+            </label>
+
+            <div class="header-actions">
+              <button
+                class="filter-toggle-button"
+                id="filter-toggle-button"
+                type="button"
+                aria-expanded="false"
+                aria-controls="filter-panel"
+              >
+                <span>Filters</span>
+                <span class="filter-toggle-meta" id="filter-toggle-meta"
+                  >All app types • All intents</span
+                >
+                <span
+                  class="filter-toggle-icon"
+                  id="filter-toggle-icon"
+                  aria-hidden="true"
+                  >+</span
+                >
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-bottom-row">
+          <div class="stats" id="stats" aria-label="Library statistics"></div>
+        </div>
+
+        <section
+          class="filter-panel hidden"
+          id="filter-panel"
+          aria-label="Filters"
+        >
+          <div class="filter-inner">
+            <div class="filter-group">
+              <div class="filter-group-label">App Type</div>
+              <div class="chip-row" id="app-type-chips"></div>
+            </div>
+
+            <div class="filter-group">
+              <div class="filter-group-label">Intent</div>
+              <div class="chip-row" id="intent-chips"></div>
+            </div>
+
+            <div class="filter-actions">
+              <label class="sort-control">
+                <span class="sort-label">Sort</span>
+                <select id="sort-select" aria-label="Sort screenshots">
+                  <option value="default">Default</option>
+                  <option value="alphabetical">Alphabetical</option>
+                  <option value="most-screenshots">Most screenshots</option>
+                  <option value="recent">Recently added</option>
+                </select>
+              </label>
+
+              <button
+                class="clear-button"
+                id="clear-filters-button"
+                type="button"
+              >
+                Clear filters
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </header>
+
+    <div class="page-shell page-layout">
+      <aside class="sidebar" aria-label="App type navigation">
+        <div class="sidebar-card">
+          <p class="sidebar-label">App Types</p>
+          <nav id="sidebar-nav" class="sidebar-nav"></nav>
+        </div>
+      </aside>
+
+      <main id="main-content" class="main-content" tabindex="-1">
+        <div id="empty-state" class="empty-state hidden" aria-live="polite">
+          <h2>No matching screenshots found</h2>
+          <p>Try clearing filters or searching a different keyword.</p>
+          <button
+            type="button"
+            class="empty-state-button"
+            id="empty-clear-button"
+          >
+            Clear filters
+          </button>
+        </div>
+
+        <div id="content-root"></div>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="page-shell footer-inner">
+        <p>Built as a visual reference library for product patterns.</p>
+        <p>
+          Screenshots belong to their respective owners and are shown for
+          reference and educational purposes.
+        </p>
+      </div>
+    </footer>
+
+    <div
+      id="image-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Image preview"
+    >
+      <div class="modal-backdrop" data-close-modal="true"></div>
+
+      <div class="modal-stage" role="document">
+        <button
+          class="modal-close"
+          id="modal-close-button"
+          type="button"
+          aria-label="Close image preview"
+        >
+          ×
+        </button>
+
+        <button
+          class="modal-nav modal-prev"
+          id="modal-prev-button"
+          type="button"
+          aria-label="Previous image"
+        >
+          ‹
+        </button>
+
+        <div class="modal-image-wrap">
+          <img id="modal-image" src="" alt="" />
+        </div>
+
+        <button
+          class="modal-nav modal-next"
+          id="modal-next-button"
+          type="button"
+          aria-label="Next image"
+        >
+          ›
+        </button>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
