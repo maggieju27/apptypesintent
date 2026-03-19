@@ -59,6 +59,21 @@ const APP_TYPE_HELPERS = {
   "Admin / Dashboard": "Monitoring, controls, and operational system surfaces.",
 };
 
+const INTENT_HELPERS = {
+  Onboarding: "Entry points, account setup, and first-time product guidance.",
+  Browse: "Scanning content, inventory, feeds, and collections.",
+  Search: "Targeted retrieval, query entry, and results exploration.",
+  Discover: "Recommendation surfaces and exploratory pathways.",
+  "Detail / View": "Focused item, article, place, or content detail screens.",
+  Create: "Creation flows for content, pages, playlists, and outputs.",
+  Edit: "Modification, revision, and update interfaces.",
+  Interact: "Engagement, collaboration, feedback, and conversation patterns.",
+  Transact: "Purchase, payment, booking, and checkout moments.",
+  Monitor: "Status, progress, analytics, and ongoing oversight surfaces.",
+  Configure: "Preferences, settings, and account/system configuration.",
+  "System Feedback": "States that communicate confirmation, errors, or system status.",
+};
+
 const FOLDER_TO_APP_TYPE = {
   SocialMedia: "Social Media",
   "E-Commerce": "E-commerce",
@@ -174,6 +189,7 @@ const STATE = {
   modalIndex: -1,
   modalItems: [],
   filtersOpen: false,
+  primaryTaxonomy: "appType",
 };
 
 const elements = {
@@ -184,6 +200,7 @@ const elements = {
   clearButton: document.getElementById("clear-filters-button"),
   emptyClearButton: document.getElementById("empty-clear-button"),
   sidebarNav: document.getElementById("sidebar-nav"),
+  sidebarLabel: document.getElementById("sidebar-label"),
   contentRoot: document.getElementById("content-root"),
   emptyState: document.getElementById("empty-state"),
   stats: document.getElementById("stats"),
@@ -196,6 +213,8 @@ const elements = {
   filterToggleButton: document.getElementById("filter-toggle-button"),
   filterToggleIcon: document.getElementById("filter-toggle-icon"),
   filterToggleMeta: document.getElementById("filter-toggle-meta"),
+  taxonomyAppTypeButton: document.getElementById("taxonomy-app-type"),
+  taxonomyIntentButton: document.getElementById("taxonomy-intent"),
 };
 
 const DATA = buildLibraryData();
@@ -207,6 +226,7 @@ function init() {
   renderFilterChips();
   bindEvents();
   updateFilterPanelUI();
+  updateTaxonomyUI();
   render();
 }
 
@@ -539,6 +559,20 @@ function bindEvents() {
     render();
   });
 
+  elements.taxonomyAppTypeButton.addEventListener("click", () => {
+    if (STATE.primaryTaxonomy === "appType") return;
+    STATE.primaryTaxonomy = "appType";
+    updateTaxonomyUI();
+    render();
+  });
+
+  elements.taxonomyIntentButton.addEventListener("click", () => {
+    if (STATE.primaryTaxonomy === "intent") return;
+    STATE.primaryTaxonomy = "intent";
+    updateTaxonomyUI();
+    render();
+  });
+
   elements.clearButton.addEventListener("click", clearFilters);
   elements.emptyClearButton.addEventListener("click", clearFilters);
 
@@ -592,6 +626,24 @@ function updateFilterSummary() {
   elements.filterToggleMeta.textContent = `${appTypeLabel} • ${intentLabel}`;
 }
 
+function updateTaxonomyUI() {
+  const isAppType = STATE.primaryTaxonomy === "appType";
+
+  elements.taxonomyAppTypeButton.classList.toggle("active", isAppType);
+  elements.taxonomyIntentButton.classList.toggle("active", !isAppType);
+
+  elements.taxonomyAppTypeButton.setAttribute(
+    "aria-selected",
+    String(isAppType),
+  );
+  elements.taxonomyIntentButton.setAttribute(
+    "aria-selected",
+    String(!isAppType),
+  );
+
+  elements.sidebarLabel.textContent = isAppType ? "App Types" : "Intents";
+}
+
 function clearFilters() {
   STATE.selectedAppType = "All";
   STATE.selectedIntent = "All";
@@ -610,15 +662,15 @@ function render() {
   renderFilterChips();
 
   const filtered = getFilteredItems();
-  const grouped = groupItems(filtered);
+  const sections = buildSections(filtered);
 
-  STATE.modalItems = flattenGroupedItems(grouped);
+  STATE.modalItems = flattenSectionItems(sections);
   STATE.modalIndex = STATE.modalItems.length
     ? Math.min(STATE.modalIndex, STATE.modalItems.length - 1)
     : -1;
 
-  renderSidebar(grouped);
-  renderContent(grouped);
+  renderSidebar(sections);
+  renderContent(sections);
   toggleEmptyState(filtered.length === 0);
 
   updateSidebarOnScroll();
@@ -705,87 +757,119 @@ function sortItems(items, sortMode) {
   return sorted;
 }
 
-function groupItems(items) {
-  const map = new Map();
-
-  APP_TYPES.forEach((appType) => {
-    const appItems = items.filter((item) => item.appType === appType);
-    if (!appItems.length) return;
-
-    const intents = INTENTS.map((intent) => ({
-      intent,
-      items: appItems.filter((item) => item.intent === intent),
-    })).filter((group) => group.items.length);
-
-    map.set(appType, intents);
-  });
-
-  return map;
+function buildSections(items) {
+  return STATE.primaryTaxonomy === "appType"
+    ? buildAppTypeSections(items)
+    : buildIntentSections(items);
 }
 
-function flattenGroupedItems(grouped) {
+function buildAppTypeSections(items) {
+  const sections = [];
+
+  APP_TYPES.forEach((appType) => {
+    const sectionItems = items.filter((item) => item.appType === appType);
+    if (!sectionItems.length) return;
+
+    const subgroups = INTENTS.map((intent) => ({
+      label: intent,
+      items: sectionItems.filter((item) => item.intent === intent),
+    })).filter((group) => group.items.length);
+
+    sections.push({
+      id: getSectionId("appType", appType),
+      label: appType,
+      helper: APP_TYPE_HELPERS[appType] || "",
+      count: sectionItems.length,
+      metaCount: subgroups.length,
+      metaLabel: "intent",
+      subgroups,
+    });
+  });
+
+  return sections;
+}
+
+function buildIntentSections(items) {
+  const sections = [];
+
+  INTENTS.forEach((intent) => {
+    const sectionItems = items.filter((item) => item.intent === intent);
+    if (!sectionItems.length) return;
+
+    const subgroups = APP_TYPES.map((appType) => ({
+      label: appType,
+      items: sectionItems.filter((item) => item.appType === appType),
+    })).filter((group) => group.items.length);
+
+    sections.push({
+      id: getSectionId("intent", intent),
+      label: intent,
+      helper: INTENT_HELPERS[intent] || "",
+      count: sectionItems.length,
+      metaCount: subgroups.length,
+      metaLabel: "app type",
+      subgroups,
+    });
+  });
+
+  return sections;
+}
+
+function flattenSectionItems(sections) {
   const flat = [];
-  grouped.forEach((intentGroups) => {
-    intentGroups.forEach((group) => {
+
+  sections.forEach((section) => {
+    section.subgroups.forEach((group) => {
       flat.push(...group.items);
     });
   });
+
   return flat;
 }
 
-function renderSidebar(grouped) {
-  const appTypesWithSections = [...grouped.keys()];
-
-  elements.sidebarNav.innerHTML = appTypesWithSections
-    .map((appType, index) => {
-      const id = getSectionId(appType);
+function renderSidebar(sections) {
+  elements.sidebarNav.innerHTML = sections
+    .map((section, index) => {
       return `
         <a
-          href="#${id}"
+          href="#${section.id}"
           class="sidebar-link ${index === 0 ? "active" : ""}"
-          data-sidebar-target="${id}"
+          data-sidebar-target="${section.id}"
         >
-          ${escapeHtml(appType)}
+          ${escapeHtml(section.label)}
         </a>
       `;
     })
     .join("");
 }
 
-function renderContent(grouped) {
-  if (!grouped.size) {
+function renderContent(sections) {
+  if (!sections.length) {
     elements.contentRoot.innerHTML = "";
     return;
   }
 
   let html = "";
 
-  grouped.forEach((intentGroups, appType) => {
-    const items = intentGroups.flatMap((group) => group.items);
-    const sectionId = getSectionId(appType);
-
+  sections.forEach((section) => {
     html += `
-      <section class="app-section" id="${sectionId}" data-section-id="${sectionId}">
+      <section class="app-section" id="${section.id}" data-section-id="${section.id}">
         <div class="app-section-header">
           <div>
-            <p class="app-section-kicker">${items.length} screenshot${
-              items.length === 1 ? "" : "s"
+            <p class="app-section-kicker">${section.count} screenshot${
+              section.count === 1 ? "" : "s"
             }</p>
-            <h2>${escapeHtml(appType)}</h2>
-            <p class="app-section-description">${escapeHtml(
-              APP_TYPE_HELPERS[appType] || "",
-            )}</p>
+            <h2>${escapeHtml(section.label)}</h2>
+            <p class="app-section-description">${escapeHtml(section.helper)}</p>
           </div>
           <div class="app-section-stats">
-            <span>${intentGroups.length} intent${
-              intentGroups.length === 1 ? "" : "s"
+            <span>${section.metaCount} ${section.metaLabel}${
+              section.metaCount === 1 ? "" : "s"
             }</span>
           </div>
         </div>
         <div class="intent-groups">
-          ${intentGroups
-            .map((group) => renderIntentGroup(group, items))
-            .join("")}
+          ${section.subgroups.map((group) => renderSubgroup(group)).join("")}
         </div>
       </section>
     `;
@@ -794,7 +878,7 @@ function renderContent(grouped) {
   elements.contentRoot.innerHTML = html;
 }
 
-function renderIntentGroup(group, allItemsInSection) {
+function renderSubgroup(group) {
   const firstIndex = STATE.modalItems.findIndex(
     (item) => item.id === group.items[0].id,
   );
@@ -803,7 +887,7 @@ function renderIntentGroup(group, allItemsInSection) {
     <section class="intent-group">
       <div class="intent-group-header">
         <div>
-          <h3>${escapeHtml(group.intent)}</h3>
+          <h3>${escapeHtml(group.label)}</h3>
         </div>
         <p class="intent-group-count">${group.items.length} screen${
           group.items.length === 1 ? "" : "s"
@@ -813,11 +897,7 @@ function renderIntentGroup(group, allItemsInSection) {
       <div class="card-grid">
         ${group.items
           .map((item, index) =>
-            renderCard(
-              item,
-              firstIndex === -1 ? index : firstIndex + index,
-              allItemsInSection,
-            ),
+            renderCard(item, firstIndex === -1 ? index : firstIndex + index),
           )
           .join("")}
       </div>
@@ -874,8 +954,8 @@ function toggleEmptyState(isEmpty) {
   elements.emptyState.classList.toggle("hidden", !isEmpty);
 }
 
-function getSectionId(appType) {
-  return `section-${appType.toLowerCase().replace(/[^\w]+/g, "-")}`;
+function getSectionId(mode, value) {
+  return `section-${mode}-${value.toLowerCase().replace(/[^\w]+/g, "-")}`;
 }
 
 function handleScroll() {
