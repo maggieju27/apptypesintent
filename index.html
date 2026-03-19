@@ -100,9 +100,34 @@
     </header>
 
     <div class="page-shell page-layout">
-      <aside class="sidebar" aria-label="App type navigation">
+      <aside class="sidebar" aria-label="Library navigation">
         <div class="sidebar-card">
-          <p class="sidebar-label">App Types</p>
+          <p class="sidebar-label">Browse by</p>
+
+          <div class="taxonomy-toggle" role="tablist" aria-label="Primary taxonomy">
+            <button
+              type="button"
+              class="taxonomy-toggle-button active"
+              id="taxonomy-app-type"
+              data-taxonomy="appType"
+              role="tab"
+              aria-selected="true"
+            >
+              App Type
+            </button>
+            <button
+              type="button"
+              class="taxonomy-toggle-button"
+              id="taxonomy-intent"
+              data-taxonomy="intent"
+              role="tab"
+              aria-selected="false"
+            >
+              Intent
+            </button>
+          </div>
+
+          <p class="sidebar-label" id="sidebar-label">App Types</p>
           <nav id="sidebar-nav" class="sidebar-nav"></nav>
         </div>
       </aside>
